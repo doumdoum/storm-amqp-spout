@@ -31,7 +31,12 @@ public class SharedQueueWithBinding implements QueueDeclaration {
 	private final String queueName;
 	private final String exchange;
 	private final String routingKey;
-	private long queue_ttl, queue_expires, queue_max_length;
+
+	private Map<String, Object> queueArgs = new HashMap<String, Object>();
+	
+	private boolean durable = true;
+	private boolean exclusive = false;
+	private boolean autoDelete = false;
 
 	/**
 	 * Create a declaration of a named, durable, non-exclusive queue bound to
@@ -48,9 +53,10 @@ public class SharedQueueWithBinding implements QueueDeclaration {
 		this.queueName = queueName;
 		this.exchange = exchange;
 		this.routingKey = routingKey;
-		this.queue_ttl = queue_ttl;
-		this.queue_expires = queue_expires;
-		this.queue_max_length = queue_max_length;
+
+		queueArgs.put("x-message-ttl", queue_ttl);
+		queueArgs.put("x-expires",     queue_expires);
+		queueArgs.put("x-max-length",  queue_max_length);
 	}
 
 	/**
@@ -64,18 +70,10 @@ public class SharedQueueWithBinding implements QueueDeclaration {
 	 */
 	@Override
 	public Queue.DeclareOk declare(Channel channel) throws IOException {
-		Map<String, Object> args = new HashMap<String, Object>();
-		args.put("x-message-ttl", queue_ttl);
-		args.put("x-expires",     queue_expires);
-		args.put("x-max-length",  queue_max_length);
 		channel.exchangeDeclarePassive(exchange);
 
-		final Queue.DeclareOk queue = channel.queueDeclare(
-				queueName,
-				/* durable */ true,
-				/* non-exclusive */ false,
-				/* non-auto-delete */ false,
-				args);
+		final Queue.DeclareOk queue = 
+			channel.queueDeclare( queueName, durable, exclusive, autoDelete, queueArgs);
 
 		channel.queueBind(queue.getQueue(), exchange, routingKey);
 
@@ -88,5 +86,37 @@ public class SharedQueueWithBinding implements QueueDeclaration {
 	@Override
 	public boolean isParallelConsumable() {
 		return true;
+	}
+
+	public final Map<String, Object> getQueueArgs() {
+		return queueArgs;
+	}
+
+	public final void setQueueArgs(Map<String, Object> queueArgs) {
+		this.queueArgs = queueArgs;
+	}
+
+	public final boolean isDurable() {
+		return durable;
+	}
+
+	public final void setDurable(boolean durable) {
+		this.durable = durable;
+	}
+
+	public final boolean isExclusive() {
+		return exclusive;
+	}
+
+	public final void setExclusive(boolean exclusive) {
+		this.exclusive = exclusive;
+	}
+
+	public final boolean isAutoDelete() {
+		return autoDelete;
+	}
+
+	public final void setAutoDelete(boolean autoDelete) {
+		this.autoDelete = autoDelete;
 	}
 }
