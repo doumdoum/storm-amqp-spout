@@ -47,9 +47,23 @@ public class SharedQueueWithBinding implements QueueDeclaration {
 	 * @param routingKey  routing key for the exchange binding.  Use "#" to
 	 *                    receive all messages published to the exchange.
 	 */
-	public SharedQueueWithBinding(String queueName, String exchange, String
-			routingKey, long queue_ttl, long queue_expires, long
-			queue_max_length) {
+	public SharedQueueWithBinding(String queueName, String exchange, String routingKey) {
+		this.queueName = queueName;
+		this.exchange = exchange;
+		this.routingKey = routingKey;
+	}
+
+	/**
+	 * Create a declaration of a named, durable, non-exclusive queue bound to
+	 * the specified exchange.
+	 *
+	 * @param queueName  name of the queue to be declared.
+	 * @param exchange  exchange to bind the queue to.
+	 * @param routingKey  routing key for the exchange binding.  Use "#" to
+	 *                    receive all messages published to the exchange.
+	 */
+	public SharedQueueWithBinding(String queueName, String exchange, String routingKey, 
+			long queue_ttl, long queue_expires, long queue_max_length) {
 		this.queueName = queueName;
 		this.exchange = exchange;
 		this.routingKey = routingKey;
@@ -70,12 +84,14 @@ public class SharedQueueWithBinding implements QueueDeclaration {
 	 */
 	@Override
 	public Queue.DeclareOk declare(Channel channel) throws IOException {
-		channel.exchangeDeclarePassive(exchange);
 
 		final Queue.DeclareOk queue = 
-			channel.queueDeclare( queueName, durable, exclusive, autoDelete, queueArgs);
+			channel.queueDeclare( queueName, durable, exclusive, autoDelete, queueArgs.isEmpty() ? null : queueArgs);
 
-		channel.queueBind(queue.getQueue(), exchange, routingKey);
+		if (!exchange.isEmpty()) {
+			channel.exchangeDeclarePassive(exchange);
+			channel.queueBind(queue.getQueue(), exchange, routingKey);
+    	}
 
 		return queue;
 	}

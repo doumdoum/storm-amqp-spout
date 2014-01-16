@@ -19,12 +19,12 @@ import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.client.ConsumerCancelledException;
 
 import com.rapportive.storm.amqp.QueueDeclaration;
+
 import backtype.storm.spout.Scheme;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
-
 import backtype.storm.utils.Utils;
 
 /**
@@ -239,6 +239,7 @@ public class AMQPSpout implements IRichSpout {
     /**
      * Resumes a paused spout
      */
+    @Override
     public void activate() {
         log.info("Unpausing spout");
         spoutActive = true;
@@ -247,6 +248,7 @@ public class AMQPSpout implements IRichSpout {
     /**
      * Pauses the spout
      */
+    @Override
     public void deactivate() {
         log.info("Pausing spout");
         spoutActive = false;
